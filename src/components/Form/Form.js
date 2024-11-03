@@ -13,11 +13,7 @@ function is_url(str) {
 }
 
 function fix_url(url) {
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  } else {
-    return `http://${url}`;
-  }
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `http://${url}`;
 }
 
 export default function Form(props) {
@@ -27,7 +23,7 @@ export default function Form(props) {
     setInputURL(event.target.value);
   };
 
-  function handleSubmit(event) {
+  const handleSubmit = (event) => {
     event.preventDefault();
     props.setErrMsg(null);
     props.setLoading(true);
@@ -35,6 +31,7 @@ export default function Form(props) {
     if (!is_url(inputURL)) {
       props.setLoading(false);
       props.setErrMsg("Unable to shorten that link. It is not a valid URL.");
+      setInputURL(""); // Clear input on invalid URL
       return;
     }
 
@@ -44,20 +41,17 @@ export default function Form(props) {
     axios
       .post(`${serverBase}/short`, postData)
       .then((res) => {
-        props.setFetchedData(res.data[0]);
-        console.log(res);
+        props.setFetchedData(res.data[0]); // Assuming res.data[0] has both full and short URLs
+        setInputURL(""); // Clear input on success
       })
       .catch((err) => {
         props.setErrMsg("Something went wrong.");
-        props.setLoading(false);
         console.error(err);
+      })
+      .finally(() => {
+        props.setLoading(false); // Ensure loading state is reset in both success and error cases
       });
-
-    setTimeout(() => {
-      props.setLoading(false);
-      setInputURL("");
-    }, 1000);
-  }
+  };
 
   return (
     <form
